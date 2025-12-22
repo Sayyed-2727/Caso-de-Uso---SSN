@@ -1,0 +1,82 @@
+* {
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f4f6f8;
+  color: #333;
+}
+
+header {
+  background: #0b5ed7;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  padding: 30px;
+}
+
+.search-box, .results-box {
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+h2 {
+  margin-top: 0;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background: #0b5ed7;
+  color: white;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #084298;
+}
+
+.flight-card {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.flight-card strong {
+  font-size: 18px;
+}
+
+footer {
+  text-align: center;
+  padding: 15px;
+  background: #e9ecef;
+  margin-top: 30px;
+}
