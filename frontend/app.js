@@ -4,12 +4,15 @@ const resultsDiv = document.getElementById("results");
 const BACKEND_URL = "http://localhost:8000";
 
 
+const alertForm = document.getElementById("alertForm");
+const alertResult = document.getElementById("alertResult");
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   resultsDiv.innerHTML = "⏳ Buscando vuelos...";
 
-  const origin = document.getElementById("origin").value.toUpperCase();
-  const destination = document.getElementById("destination").value.toUpperCase();
+  const origin = document.getElementById("origin").value.trim().toUpperCase();
+  const destination = document.getElementById("destination").value.trim().toUpperCase();
   const date = document.getElementById("date").value;
 
   try {
@@ -23,11 +26,66 @@ form.addEventListener("submit", async (e) => {
     }
     const data = await response.json();
     console.log('Data:', data);
+
+    if (data.error) {
+      resultsDiv.innerHTML = `⚠️ Error de la API: ${data.error}`;
+      return;
+    }
+
+    if (!Array.isArray(data)) {
+      resultsDiv.innerHTML = "❌ Respuesta inesperada del servidor.";
+      return;
+    }
+
     renderResults(data);
 
   } catch (error) {
     console.error('Error:', error);
     resultsDiv.innerHTML = "❌ Error al conectar con el servidor";
+  }
+});
+
+alertForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  alertResult.innerHTML = "⏳ Creando alerta...";
+
+  const origin = document.getElementById("origin").value.trim().toUpperCase();
+  const destination = document.getElementById("destination").value.trim().toUpperCase();
+  const date = document.getElementById("date").value;
+  const targetPrice = document.getElementById("targetPrice").value;
+  const email = document.getElementById("email").value.trim();
+
+  if (!origin || !destination || !date) {
+    alertResult.innerHTML = "⚠️ Rellena primero los datos de búsqueda arriba (Origen, Destino, Fecha).";
+    return;
+  }
+
+  const payload = {
+    origin: origin,
+    destination: destination,
+    date: date,
+    target_price: parseFloat(targetPrice),
+    email: email
+  };
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/create-alert`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) throw new Error("Error creando alerta");
+
+    const data = await response.json();
+    alertResult.innerHTML = `✅ Alerta creada. ID: ${data.alert_id} (Guardada en S3)`;
+    alertResult.style.color = "green";
+  } catch (error) {
+    console.error(error);
+    alertResult.innerHTML = "❌ Fallo al crear la alerta.";
+    alertResult.style.color = "red";
   }
 });
 
