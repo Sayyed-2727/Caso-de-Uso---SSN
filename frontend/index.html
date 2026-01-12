@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelTracker</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=29">
+</head>
+
+<body>
+    <header class="animate-enter">
+        <div class="sky-container">
+            <i class="ri-cloud-fill cloud cloud-1"></i>
+            <i class="ri-cloud-fill cloud cloud-2"></i>
+            <i class="ri-cloud-fill cloud cloud-3"></i>
+            <i class="ri-cloud-fill cloud cloud-4"></i>
+            <i class="ri-cloud-fill cloud cloud-5"></i>
+        </div>
+        <div class="container header-content">
+            <div class="header-top">
+                <div class="logo">
+                    <h1><i class="ri-plane-fill"></i> TravelTracker</h1>
+                </div>
+                <button class="btn-icon" onclick="openHelpModal()" title="Ayuda">
+                    <i class="ri-question-line"></i>
+                </button>
+            </div>
+            <p>Tu asistente para encontrar tu vuelo al mejor precio</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="search-section animate-enter delay-1">
+            <div class="card search-card">
+                <div class="card-header">
+                    <h2> <i class="ri-search-line"></i> Buscar vuelos</h2>
+                    <p>Introduce los datos de tu viaje para empezar:</p>
+                </div>
+                <form id="searchForm" class="grid-form">
+                    <div class="form-group">
+                        <label><i class="ri-flight-takeoff-line"></i> Origen</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="origin" placeholder="MAD" maxlength="3" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="ri-flight-land-line"></i> Destino</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="destination" placeholder="JFK" maxlength="3" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="ri-calendar-line"></i> Fecha</label>
+                        <div class="input-wrapper">
+                            <input type="date" id="date" required>
+                        </div>
+                    </div>
+                    <div class="form-group btn-align">
+                        <label>&nbsp;</label>
+                        <button type="submit" id="btnSearch" class="btn-primary">
+                            <i class="ri-search-line"></i> Buscar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="results-section animate-enter delay-2">
+            <div id="loader" class="loader-container hidden">
+                <div class="spinner"></div>
+                <p>Buscando las mejores ofertas...</p>
+            </div>
+
+            <div class="results-header hidden" id="resultsHeader">
+                <h2>Resultados</h2>
+                <button class="btn-secondary small" onclick="openModal('filterModal')">
+                    <i class="ri-equalizer-line"></i> Filtros
+                </button>
+            </div>
+
+            <div id="resultsGrid" class="results-grid">
+            </div>
+
+            <div id="paginationContainer" class="pagination-container"></div>
+        </section>
+    </main>
+
+    <div id="filterModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('filterModal')"><i class="ri-close-line"></i></button>
+            <div class="modal-header">
+                <h3>Filtrar búsqueda</h3>
+            </div>
+            <div class="modal-body">
+                <div class="filter-group">
+                    <label>Precio máximo: <span id="priceValue">...</span></span><input type="range" id="priceRange"
+                            min="0" max="1000" step="10" class="range-slider">
+                </div>
+                <div class="filter-group" style="margin-top: 1.5rem;">
+                    <label>Aerolíneas</label>
+                    <div id="airlineFilters" class="airline-filters">
+                    </div>
+                </div>
+                <button class="btn-primary full-width" style="margin-top: 2rem;" onclick="applyFiltersAndClose()">
+                    Aplicar filtros
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="alertModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('alertModal')"><i class="ri-close-line"></i></button>
+            <div class="modal-header">
+                <div class="icon-circle pulse-icon">
+                    <i class="ri-notification-3-line"></i>
+                </div>
+                <h3>Crear alerta</h3>
+                <p>Te avisaremos cuando el precio baje.</p>
+            </div>
+
+            <div id="modalFlightSummary" class="flight-summary-box">
+            </div>
+
+            <div class="modal-body">
+                <form id="subscribeForm">
+                    <div class="form-group">
+                        <label>Email para notificaciones</label>
+                        <div class="input-wrapper">
+                            <input type="email" id="modalEmail" placeholder="tu@email.com" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary full-width">
+                        <i class="ri-check-line"></i> Activar alerta
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="helpModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('helpModal')"><i class="ri-close-line"></i></button>
+            <div class="modal-header">
+                <h3>Cómo funciona</h3>
+            </div>
+            <div class="modal-body help-text">
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="ri-search-eye-line"></i>
+                    </div>
+                    <div class="step-content">
+                        <strong>1. Busca tu vuelo ideal</strong>
+                        <p>Introduce el código IATA del origen (ej: MAD) y destino (ej: JFK), selecciona tu fecha y deja
+                            que rastreenos las mejores opciones por ti.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="ri-equalizer-line"></i>
+                    </div>
+                    <div class="step-content">
+                        <strong>2. Filtra los resultados</strong>
+                        <p>Usa el botón "Filtros" para ajustar tu presupuesto máximo o elegir tus aerolíneas favoritas.
+                            Recuerda aplicar los cambios.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="ri-notification-3-line"></i>
+                    </div>
+                    <div class="step-content">
+                        <strong>3. Activa una alerta de precio</strong>
+                        <p>¿No te convence el precio? Pulsa el botón "Crear alerta" en la tarjeta del
+                            vuelo que te interese.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="ri-mail-send-line"></i>
+                    </div>
+                    <div class="step-content">
+                        <strong>4. Nosotros te avisamos</strong>
+                        <p>Introduce tu email y relájate. Nuestro sistema monitorizará el precio y te enviará un correo
+                            automáticamente si baja.</p>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-secondary full-width" onclick="closeModal('helpModal')">¡Todo claro!</button>
+        </div>
+    </div>
+
+    <div id="flightLoader" class="loader-overlay hidden">
+        <div class="plane-animation">
+            <i class="ri-plane-fill"></i>
+        </div>
+        <h2>Buscando vuelos...</h2>
+    </div>
+
+    <div id="notification-toast" class="toast hidden"></div>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2026 TravelTracker</p>
+            <p class="subtitle">Powered by Amadeus & AWS</p>
+        </div>
+    </footer>
+
+    <script src="app.js?v=4"></script>
+</body>
+
+</html>
