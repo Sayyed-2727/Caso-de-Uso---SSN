@@ -145,9 +145,44 @@ Valores requeridos:
 
 ---
 
+### 2️⃣ Crear SNS Topic
 
+El topic SNS es necesario para enviar notificaciones por email.
 
-### 2️⃣ Credenciales de Amadeus
+#### Desde AWS Console:
+
+1. Acceder a https://console.aws.amazon.com/sns
+2. Asegurarse de estar en región **us-east-1**
+3. Ir a **Topics** → **Create topic**
+4. Configurar:
+   * Type: **Standard**
+   * Name: `AlertasVuelos`
+5. Click **Create topic**
+6. Copiar el **ARN** del topic (ejemplo: `arn:aws:sns:us-east-1:123456789012:AlertasVuelos`)
+
+#### Suscribir tu email:
+
+1. Dentro del topic creado, ir a **Subscriptions** → **Create subscription**
+2. Configurar:
+   * Protocol: **Email**
+   * Endpoint: tu email
+3. Click **Create subscription**
+4. **Importante:** Revisar tu correo y confirmar la suscripción
+
+#### Alternativa con CLI:
+
+```bash
+aws sns create-topic --name AlertasVuelos --region us-east-1
+
+aws sns subscribe \
+  --topic-arn arn:aws:sns:us-east-1:123456789012:AlertasVuelos \
+  --protocol email \
+  --notification-endpoint tu-email@ejemplo.com
+```
+
+---
+
+### 3️⃣ Credenciales de Amadeus
 
 1. [https://developers.amadeus.com](https://developers.amadeus.com)
 2. Crear aplicación (Self-Service)
@@ -158,14 +193,14 @@ Valores requeridos:
 
 ---
 
-### 3️⃣ Archivo `.env`
+### 4️⃣ Archivo `.env`
 
 ```bash
 cp .env.example .env
 nano .env
 ```
 
-Contenido:
+**Descomentar y rellenar con tus credenciales:**
 
 ```env
 AWS_ACCESS_KEY_ID=TU_ACCESS_KEY
@@ -181,11 +216,9 @@ WORKER_SCHEDULE_HOURS=6
 LOG_LEVEL=INFO
 ```
 
-🔒 **Todas las credenciales se gestionan desde este único archivo**.
+🔒 **Importante:** Descomentar todas las líneas y rellenar con las credenciales reales antes de ejecutar.
 
 ---
-
-Cabe añadir que el topic hay crearlo ya que es exclusivo para cada usuario, si no no funcionaran las alertas
 
 ## 🚀 Uso
 
