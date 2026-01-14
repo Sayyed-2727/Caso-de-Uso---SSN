@@ -1,4 +1,4 @@
-# ✈️ Flight Price Monitor
+# ✈️ Travel Tracker
 
 ![AWS](https://img.shields.io/badge/AWS-DynamoDB%20%7C%20SNS-orange?logo=amazon-aws)
 ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
@@ -20,29 +20,21 @@ Sistema inteligente de monitorización de precios de vuelos que utiliza servicio
 * [Instalación](#-instalación)
 * [Configuración](#️-configuración)
 * [Uso](#-uso)
-* [Desarrollo](#-desarrollo)
-* [Troubleshooting](#-troubleshooting)
 * [Costes](#-costes)
-* [Contribuciones](#-contribuciones)
 * [Autores](#-autores)
-* [Licencia](#-licencia)
 
 ---
 
 ## 🚀 Características
 
-* ✅ **Monitorización automática** de precios de vuelos cada 6 horas
-* 📧 **Notificaciones por email** cuando el precio baja del umbral definido
-* 🎯 **Alertas inteligentes** basadas en:
-
-  * Precio bajo umbral absoluto
-  * Reducción ≥ 15% respecto al promedio de 72h
-  * Mínimo local (precio más bajo en 7 días)
-* 🗄️ **Histórico de precios** almacenado en DynamoDB
-* 🐳 **Despliegue con Docker Compose** (plug & play)
-* 📊 **API REST documentada** con Swagger UI
-* 🌐 **Interfaz web** responsiva y moderna
-* ☁️ **Arquitectura cloud-native** desacoplada y escalable
+* ✅ **Monitorización automática** de precios de vuelos cada 1 hora.
+* 📧 **Notificaciones por email** inmediatas a través de AWS SNS.
+* 🎯 **Detección de oportunidades**: Notifica cuando el precio actual es menor al precio guardado en la alerta.
+* 🗄️ **Persistencia en DynamoDB**: Gestión eficiente de alertas activas.
+* 🐳 **Despliegue con Docker Compose**: Entorno reproducible y aislado.
+* 📊 **API REST**: Backend ligero y rápido con FastAPI.
+* 🌐 **Interfaz web**: SPA responsiva para buscar vuelos y crear alertas.
+* ☁️ **Arquitectura cloud-native**: Desacoplada y escalable (Productor/Consumidor).
 
 ---
 
@@ -66,9 +58,9 @@ Sistema inteligente de monitorización de precios de vuelos que utiliza servicio
 ┌──────────┐            ┌─────────────┐     ┌─────────────┐
 │ DynamoDB │            │   WORKER    │     │   AWS SNS   │
 │          │◄───────────│  (Schedule) │────►│   Topics    │
-│ • Users  │            │             │     │             │
-│ • Routes │            │  Amadeus    │     │   Email     │
-│ • Prices │            │  API Client │     │   Alerts    │
+│ • Alerts │            │             │     │             │
+│          │            │  Amadeus    │     │   Email     │
+│          │            │  API Client │     │   Alerts    │
 └──────────┘            └─────────────┘     └─────────────┘
 ```
 
@@ -79,32 +71,10 @@ Sistema inteligente de monitorización de precios de vuelos que utiliza servicio
 ### Software Requerido
 
 | Herramienta    | Versión Mínima |
-| -------------- | -------------- |
-| Docker Engine  | 24.0+          |
-| Docker Compose | 2.23+          |
-| Git            | 2.30+          |
-
-### Hardware Recomendado
-
-* **CPU:** 2 cores o más
-* **RAM:** 4 GB disponibles
-* **Disco:** 2 GB libres
-* **Sistema Operativo:** Linux, macOS, Windows 10/11
-
-### Cuentas y Credenciales
-
-* **Cuenta AWS única** con permisos para:
-
-  * Amazon DynamoDB
-  * Amazon SNS
-
-> 🔐 **Nota importante:**
-> Este proyecto utiliza **una única credencial de AWS compartida por todo el sistema** (backend y worker).
-> **No es necesario crear múltiples usuarios IAM** ni usuarios por servicio.
-
-* **Cuenta Amadeus for Developers** (Free Tier)
-
-  * 2,000 transacciones/mes gratuitas
+| -------------- | ---------------- |
+| Docker Engine  | 24.0+            |
+| Docker Compose | 2.23+            |
+| Python         | 3.11+            |
 
 ---
 
@@ -123,129 +93,83 @@ cd Caso-de-Uso---SSN
 
 ### 1️⃣ Configurar Credenciales AWS (ÚNICAS)
 
-El sistema utiliza **una sola pareja de credenciales AWS** definida mediante variables de entorno. Estas credenciales serán usadas automáticamente por:
+El sistema utiliza **una sola pareja de credenciales AWS** definida mediante variables de entorno para todo el sistema (Backend y Worker).
 
-* Backend (FastAPI)
-* Worker de monitorización
+#### Usando archivo `.env`
 
-#### Opción recomendada: AWS CLI
-
-```bash
-aws configure
-```
-
-Valores requeridos:
-
-* **AWS Access Key ID**
-* **AWS Secret Access Key**
-* **Default region:** `us-east-1`
-* **Output format:** `json`
-
-> ✅ No es necesario crear usuarios adicionales ni roles separados.
-
----
-
-### 2️⃣ Crear SNS Topic
-
-El topic SNS es necesario para enviar notificaciones por email.
-
-#### Desde AWS Console:
-
-1. Acceder a https://console.aws.amazon.com/sns
-2. Asegurarse de estar en región **us-east-1**
-3. Ir a **Topics** → **Create topic**
-4. Configurar:
-   * Type: **Standard**
-   * Name: `AlertasVuelos`
-5. Click **Create topic**
-6. Copiar el **ARN** del topic (ejemplo: `arn:aws:sns:us-east-1:123456789012:AlertasVuelos`)
-
-#### Suscribir tu email:
-
-1. Dentro del topic creado, ir a **Subscriptions** → **Create subscription**
-2. Configurar:
-   * Protocol: **Email**
-   * Endpoint: tu email
-3. Click **Create subscription**
-4. **Importante:** Revisar tu correo y confirmar la suscripción
-
-#### Alternativa con CLI:
-
-```bash
-aws sns create-topic --name AlertasVuelos --region us-east-1
-
-aws sns subscribe \
-  --topic-arn arn:aws:sns:us-east-1:123456789012:AlertasVuelos \
-  --protocol email \
-  --notification-endpoint tu-email@ejemplo.com
-```
-
----
-
-### 3️⃣ Credenciales de Amadeus
-
-1. [https://developers.amadeus.com](https://developers.amadeus.com)
-2. Crear aplicación (Self-Service)
-3. Copiar:
-
-   * `AMADEUS_API_KEY`
-   * `AMADEUS_API_SECRET`
-
----
-
-### 4️⃣ Archivo `.env`
+Crea un archivo `.env` en la raíz del proyecto (ignorado por git):
 
 ```bash
 cp .env.example .env
-nano .env
 ```
 
-**Descomentar y rellenar con tus credenciales:**
+Y rellena tus datos:
 
 ```env
+# AWS Credentials
 AWS_ACCESS_KEY_ID=TU_ACCESS_KEY
 AWS_SECRET_ACCESS_KEY=TU_SECRET_KEY
+AWS_SESSION_TOKEN=TU_SESSION_TOKEN
 AWS_REGION=us-east-1
 
-SNS_TOPIC_ARN=arn:aws:sns:us-east-1:123456789012:AlertasVuelos
+# SNS Configuration
+SNS_TOPIC_ARN=arn:aws:sns:us-east-1:123456789012:AlertasVuelos # TODO: Cambiar por el ARN de tu tópico SNS
 
-AMADEUS_API_KEY=tu_api_key
-AMADEUS_API_SECRET=tu_api_secret
-
-WORKER_SCHEDULE_HOURS=6
-LOG_LEVEL=INFO
+# Amadeus API (Vuelos)
+AMADEUS_API_SECRET=tu_api_secret # TODO: Cambiar por tu API Secret de Amadeus
 ```
 
-🔒 **Importante:** Descomentar todas las líneas y rellenar con las credenciales reales antes de ejecutar.
+### 2️⃣ Inicializar Recursos AWS
 
+Para crear automáticamente la tabla de DynamoDB y el Tópico SNS, ejecuta el script de configuración incluido.
+
+Primero, exporta tus variables de entorno en la terminal (para que el script pueda conectar con AWS):
+
+```bash
+# Carga las variables del archivo .env a la sesión actual
+export AWS_ACCESS_KEY_ID=TU_ACCESS_KEY
+export AWS_SECRET_ACCESS_KEY=TU_SECRET_KEY
+export AWS_SESSION_TOKEN=TU_SESSION_TOKEN
+
+export SNS_TOPIC_ARN=TU_ARN
+
+```
+
+Y luego ejecuta el script de inicialización:
+
+```bash
+python3 infra/setup_aws.py
+```
+
+Deberías ver un mensaje confirmando la creación de la tabla `TravelAlerts` y el Tópico SNS.
+
+**Nota:** Antes de ejecutar setup_aws.py tienes que tener instalada la librería boto3. Si no la tienes instalada, ejecuta `pip install boto3`.
 ---
 
 ## 🚀 Uso
+
+Para levantar todo el entorno (Frontend, Backend y Worker):
 
 ```bash
 docker-compose up --build
 ```
 
-Servicios:
+### Servicios
 
-| Servicio    | URL                                                      |
-| ----------- | -------------------------------------------------------- |
-| Frontend    | [http://localhost](http://localhost)                     |
-| Backend API | [http://localhost:8000](http://localhost:8000)           |
-| Swagger     | [http://localhost:8000/docs](http://localhost:8000/docs) |
+| Servicio | URL                               | Descripción  |
+| -------- | --------------------------------- | ------------- |
+| Frontend | [http://localhost](http://localhost) | Web principal |
 
----
+### Endpoints Principales
 
-## 💰 Costes
-
-* AWS Free Tier: **$0.00 estimado**
-* Amadeus Free Tier: 2,000 llamadas/mes
+* `GET /search`: Buscar vuelos en tiempo real (conecta con Amadeus).
+* `POST /subscribe`: Crear una alerta de precio y guardar en DynamoDB.
 
 ---
 
 ## 👥 Autores
 
-* **Sayed Magdy Elsayed Abdellah**
+* Sayed Magdy Elsayed Abdellah
 * Patricia Díez Herguido
 * Ana Martín Serrano
 * Adrian Julian Ramos Romero
@@ -254,8 +178,8 @@ Servicios:
 
 ## 📄 Licencia
 
-MIT License © 2026 Flight Price Monitor Team
+Travel Tracker © 2026
 
 ---
 
-**⭐ Proyecto académico – credenciales AWS compartidas para simplificar despliegue y evaluación ⭐**
+**⭐ Proyecto académico – SSN 2026 ⭐**
