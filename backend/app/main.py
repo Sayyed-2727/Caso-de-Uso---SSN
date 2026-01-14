@@ -10,13 +10,12 @@ import os
 
 app = FastAPI()
 
-# Esto es lo que permite que el frontend hable con el backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permite peticiones desde cualquier lugar (incluido tu frontend)
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Permite GET, POST, OPTIONS, etc.
-    allow_headers=["*"],  # Permite todos los headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 amadeus_service = AmadeusService()
@@ -42,7 +41,6 @@ SNS_TOPIC_ARN = os.getenv("SNS_TOPIC_ARN")
 async def subscribe(sub: Subscription):
 
     try:
-        # Convertimos todo el diccionario a tipos que DynamoDB acepte
         item = {k: (Decimal(str(v)) if isinstance(v, float) else v) 
                 for k, v in sub.dict().items()}
         item['alert_id'] = str(uuid.uuid4())
@@ -52,8 +50,11 @@ async def subscribe(sub: Subscription):
         sns_client.subscribe(
             TopicArn=SNS_TOPIC_ARN,
             Protocol='email',
-            Endpoint=sub.email  # El email que viene del frontend
+            Endpoint=sub.email
         )
         return {"status": "success", "message": "Revisa tu email para confirmar la suscripción"}
     except Exception as e:
+        print(f"ERROR SUSCRIBIENDO: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
