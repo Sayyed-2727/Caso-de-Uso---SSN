@@ -65,4 +65,4 @@ if __name__ == "__main__":
     print("Worker iniciado. Ejecutando ciclo cada 1 hora...")
     while True:
         check_prices()
-        time.sleep(3600) 
+        time.sleep(3600 * 6)
